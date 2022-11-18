@@ -1,0 +1,15 @@
+public enum MsgType {
+    JOIN,
+    TURN,
+    SETCHESS,
+    UPDATE,
+    START,
+    PLACE,
+    PLACED,
+    REQUIRE_REWIND,
+    ACCEPT_REWIND,
+    REJECT_REWIND,
+    REWINDED,
+    GAME_END,
+    GAME_RESTART,
+}
