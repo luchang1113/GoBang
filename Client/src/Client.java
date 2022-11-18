@@ -1,7 +1,9 @@
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 
 public class Client {
     Socket socket;
@@ -16,12 +18,20 @@ public class Client {
     public void setReady(){
         try {
             socket = new Socket("127.0.0.1",2333);
-            ObjectOutputStream objectOutputStream=new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new ChessMsg(MsgType.JOIN,-1,-1,Chess.EMPTY));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             try {
-                ChessMsg msg = (ChessMsg) objectInputStream.readObject();
-                processMsg(msg);
+                processMsg((ChessMsg) objectInputStream.readObject());
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -34,44 +44,62 @@ public class Client {
             setReady();
             while(true)
             {
-                //System.out.println("update");
-                try {
-                    update();
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //System.out.println(df.format(System.currentTimeMillis()) + "update");
+                update();
+//                try {
+//                    Thread.sleep(500);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         }).start();
     }
     public void place(int x, int y){
         try {
-            socket = new Socket("127.0.0.1",2333);
-            ObjectOutputStream objectOutputStream=new ObjectOutputStream(socket.getOutputStream());
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new ChessMsg(MsgType.PLACE,x,y,chess));
+            objectOutputStream.flush();
+            System.out.println("Send place");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+//        try {
+//            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+//            try {
+//                processMsg((ChessMsg) objectInputStream.readObject());
+//            } catch (ClassNotFoundException e) {
+//                e.printStackTrace();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
     public void update(){
+
+//        try {
+//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+//            objectOutputStream.writeObject(new ChessMsg(MsgType.HEARTBEAT,-1,-1,Chess.EMPTY));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
         try {
-            socket = new Socket("127.0.0.1",2333);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new ChessMsg(MsgType.UPDATE,-1,-1,Chess.EMPTY));
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             try {
-                ChessMsg msg = (ChessMsg) objectInputStream.readObject();
-                processMsg(msg);
+                processMsg((ChessMsg) objectInputStream.readObject());
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
     private void processMsg(ChessMsg msg)
     {
-        if(msg.type != MsgType.UPDATE)
+        if(msg.type != MsgType.HEARTBEAT)
             System.out.printf("type:%s x:%d y:%d chess:%s\r\n",msg.type.toString(),msg.x,msg.y,msg.chess.toString());
         switch (msg.type){
             case SETCHESS -> {

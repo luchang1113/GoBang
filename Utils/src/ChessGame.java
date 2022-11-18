@@ -34,7 +34,7 @@ public class ChessGame {
             case BLACK -> next_chess = Chess.WHITE;
             case WHITE -> next_chess = Chess.BLACK;
         }
-        display();
+        //display();
     }
     public void display(){
         for(Chess[] row : board){
@@ -48,21 +48,20 @@ public class ChessGame {
             System.out.print("\r\n");
         }
     }
-    public void placeChess(int x, int y){
-        if(x < 0 || y < 0 || x > 14 || y > 14 || board[x][y] != Chess.EMPTY){
-            System.out.println("Invalid place");
-            return;
+    public boolean placeChess(int x, int y){
+        if(!placeChess(x,y,next_chess)){
+            return false;
         }
-        placeChess(x,y,next_chess);
         switch (next_chess){
             case BLACK -> next_chess = Chess.WHITE;
             case WHITE -> next_chess = Chess.BLACK;
         }
+        return true;
     }
-    public void placeChess(int x, int y, Chess chess){
+    public boolean placeChess(int x, int y, Chess chess){
         if(x < 0 || y < 0 || x > 14 || y > 14 || chess == Chess.EMPTY || board[x][y] != Chess.EMPTY){
             System.out.println("Invalid place");
-            return;
+            return false;
         }
         steps.add(new ChessStep(x,y,chess));
         board[x][y] = chess;
@@ -75,7 +74,8 @@ public class ChessGame {
                 game_end = true;
             }
         }
-        display();
+        //display();
+        return true;
     }
     public void reset(){
         steps.clear();

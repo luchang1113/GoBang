@@ -73,8 +73,11 @@ public class ChessBoard extends JPanel implements MouseListener {
         if (!game_end) {
             int place_x = (e.getX() - 25) / 30;
             int place_y = (e.getY() - 25) / 30;
-            client.place(place_x,place_y);
+            if(place_x >= 0 && place_x <= 14 && place_y >= 0 && place_y <= 14){
+
+            client.place(place_y,place_x);
             this.repaint();
+            }
         }
     }
 

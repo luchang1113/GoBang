@@ -8,7 +8,7 @@ public class MainWindow extends JFrame {
     MainWindow(Client client){
         board = new ChessBoard(this,client);
         add(board);
-        setSize(1280,720);
+        setSize(500,500);
         setVisible(true);
     }
 }

@@ -2,7 +2,7 @@ public enum MsgType {
     JOIN,
     TURN,
     SETCHESS,
-    UPDATE,
+    HEARTBEAT,
     START,
     PLACE,
     PLACED,
