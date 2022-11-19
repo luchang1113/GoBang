@@ -45,11 +45,11 @@ public class ChessBoard extends JPanel implements MouseListener {
             switch (step.chess) {
                 case WHITE -> {
                     g.setColor(Color.WHITE);
-                    g.fillOval(step.y * 30 + 25, step.x * 30 + 25, 30, 30);
+                    g.fillOval(step.y * 30 + 30, step.x * 30 + 30, 20, 20);
                 }
                 case BLACK -> {
                     g.setColor(Color.BLACK);
-                    g.fillOval(step.y * 30 + 25, step.x * 30 + 25, 30, 30);
+                    g.fillOval(step.y * 30 + 30, step.x * 30 + 30, 20, 20);
                 }
             }
         }
