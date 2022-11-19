@@ -17,6 +17,7 @@ public class GameServer {
     BufferedOutputStream slaveOut = null;
     boolean masterReady = false;
     boolean slaveReady = false;
+    boolean masterIsNull = true;
 
     GameServer() {
         game = new ChessGame();
@@ -44,8 +45,11 @@ public class GameServer {
                     System.out.println("New Client");
                     if (masterSocket == null) {
                         masterSocket = socket;
+                        masterIsNull = false;
                     } else if (slaveSocket == null) {
                         slaveSocket = socket;
+                    } else {
+                        System.out.println(masterSocket.toString());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -54,6 +58,12 @@ public class GameServer {
                 if (masterSocket != null) {
                     new Thread(() -> {
                         while (masterSocket != null) {
+                            if(masterSocket.isClosed()){
+                                masterSocket = null;
+                                masterIn = null;
+                                masterOut = null;
+                                break;
+                            }
                             try {
                                 if(masterIn == null)
                                 masterIn = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
@@ -66,14 +76,14 @@ public class GameServer {
                                 e.printStackTrace();
                             }
                         }
-                        System.out.println("Master is null");
+                        System.out.printf("Master:%s",masterIsNull?"null":"not null");
                     }).start();
                 }
 
                 if (slaveSocket != null) {
                     System.out.println("Slave entered");
                     new Thread(() -> {
-                        while (slaveSocket != null) {
+                        while (!slaveSocket.isClosed()) {
                             try {
                                 if(slaveIn == null)
                                     slaveIn = new BufferedReader(new InputStreamReader(slaveSocket.getInputStream()));
@@ -86,6 +96,9 @@ public class GameServer {
                                 e.printStackTrace();
                             }
                         }
+                        slaveSocket = null;
+                        slaveIn = null;
+                        slaveOut = null;
                         System.out.println("Slave is null");
                     }).start();
                 }
@@ -155,6 +168,7 @@ public class GameServer {
                     sendMasterMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.BLACK));
                     sendSlaveMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.WHITE));
                     sendAllMsg(new ChessMsg(MsgType.START, 0, 0, Chess.EMPTY));
+                    game.reset();
                 }
             }
             case PLACE -> {
@@ -163,6 +177,8 @@ public class GameServer {
                 }
                 if (game.game_end) {
                     sendAllMsg(new ChessMsg(MsgType.GAME_END, 0, 0, game.winner));
+                    masterReady = false;
+                    slaveReady = false;
                 }
             }
             case EXIT -> {
@@ -173,7 +189,6 @@ public class GameServer {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        masterSocket = null;
                     }
                     case WHITE -> {
                         try {
@@ -181,7 +196,6 @@ public class GameServer {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        slaveSocket = null;
                     }
                 }
             }

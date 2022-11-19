@@ -9,6 +9,7 @@ public class Client {
     ClientType type = ClientType.WATCHER;
     Chess chess = Chess.EMPTY;
     MainWindow window;
+    Thread updateThread;
     boolean gameStarted = false;
 
     public Client(MainWindow window){
@@ -41,14 +42,12 @@ public class Client {
         startUpdate();
     }
     private void startUpdate(){
-        new Thread(() -> {
-            while(true)
-            {
-                if(socket == null)
-                    break;
+        updateThread = new Thread(() -> {
+            while (!socket.isClosed()) {
                 update();
             }
-        }).start();
+        });
+        updateThread.start();
     }
     public void setReady(boolean ready){
         sendMsg(new ChessMsg(MsgType.READY,ready?1:0,0,Chess.fromInt(type.toInt())));
@@ -60,9 +59,7 @@ public class Client {
         sendMsg(new ChessMsg(MsgType.EXIT,0,0,Chess.fromInt(type.toInt())));
         try {
             socket.close();
-            in = null;
-            out = null;
-            socket = null;
+            in=null;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,6 +97,8 @@ public class Client {
                     window.board.can_place = true;
                 else
                     window.board.can_place = false;
+                window.board.steps.clear();
+                window.board.repaint();
             }
             case PLACED -> {
                 window.board.addStep(msg.x,msg.y,msg.chess);
@@ -113,6 +112,7 @@ public class Client {
                 window.setTitle("GAME_END");
                 window.board.can_place = false;
                 System.out.printf("%s wins\r\n",msg.chess.toString());
+                window.startBtn.setEnabled(true);
             }
             case ACCEPT_REWIND -> {
                 System.out.println("Rewind accepted");

@@ -85,6 +85,8 @@ public class ChessGame {
                 board[x][y] = Chess.EMPTY;
             }
         }
+        game_end = false;
+        next_chess = Chess.BLACK;
     }
     private boolean checkWin(int x, int y, Chess chess){
         boolean flag = false;
