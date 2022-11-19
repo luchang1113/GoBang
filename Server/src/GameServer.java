@@ -12,7 +12,12 @@ public class GameServer {
     Socket masterSocket = null;
     Socket slaveSocket = null;
     List<Socket> watchSockets = new ArrayList<>();
-    boolean hasBlack = false;
+    ObjectInputStream masterIn = null;
+    ObjectInputStream slaveIn = null;
+    ObjectOutputStream masterOut = null;
+    ObjectOutputStream slaveOut = null;
+    boolean masterReady = false;
+    boolean slaveReady = false;
 
     GameServer() {
         game = new ChessGame();
@@ -39,9 +44,13 @@ public class GameServer {
                             new Thread(() -> {
                                 while (true) {
                                     try {
-                                        ObjectInputStream objectInputStream = new ObjectInputStream(masterSocket.getInputStream());
+                                        masterIn = new ObjectInputStream(masterSocket.getInputStream());
+                                        if(masterOut == null){
+                                            masterOut = new ObjectOutputStream(masterSocket.getOutputStream());
+                                        }
                                         try {
-                                            processMsg((ChessMsg) objectInputStream.readObject());
+                                            ChessMsg msg = (ChessMsg) masterIn.readObject();
+                                            processMsg(msg);
                                         } catch (ClassNotFoundException e) {
                                             e.printStackTrace();
                                         }
@@ -56,9 +65,13 @@ public class GameServer {
                             new Thread(() -> {
                                 while (true) {
                                     try {
-                                        ObjectInputStream objectInputStream = new ObjectInputStream(slaveSocket.getInputStream());
+                                        slaveIn = new ObjectInputStream(slaveSocket.getInputStream());
+                                        if(slaveOut == null){
+                                            slaveOut = new ObjectOutputStream(slaveSocket.getOutputStream());
+                                        }
                                         try {
-                                            processMsg((ChessMsg) objectInputStream.readObject());
+                                            ChessMsg msg = (ChessMsg) slaveIn.readObject();
+                                            processMsg(msg);
                                         } catch (ClassNotFoundException e) {
                                             e.printStackTrace();
                                         }
@@ -82,9 +95,9 @@ public class GameServer {
     private void sendMasterMsg(ChessMsg msg) {
         if (masterSocket != null) {
             try {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(masterSocket.getOutputStream());
-                objectOutputStream.writeObject(msg);
-                objectOutputStream.flush();
+                System.out.printf("[Send Master] Type:%s, x:%d, y:%d, Chess:%s\r\n",msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+                masterOut.writeObject(msg);
+                masterOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -94,9 +107,9 @@ public class GameServer {
     private void sendSlaveMsg(ChessMsg msg) {
         if (slaveSocket != null) {
             try {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(slaveSocket.getOutputStream());
-                objectOutputStream.writeObject(msg);
-                objectOutputStream.flush();
+                System.out.printf("[Send Slave] Type:%s, x:%d, y:%d, Chess:%s\r\n",msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+                slaveOut.writeObject(msg);
+                slaveOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -122,37 +135,36 @@ public class GameServer {
     }
 
     private void processMsg(ChessMsg msg) {
-        if (msg.type != MsgType.HEARTBEAT)
-            System.out.printf("type:%s x:%d y:%d chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+        System.out.printf("[Receive] Type:%s x:%d y:%d Chess:%s\r\n",msg.type.toString(),msg.x,msg.y,msg.chess.toString());
         switch (msg.type) {
             case JOIN -> {
-                if (!hasBlack) {
-                    hasBlack = true;
-                    sendMasterMsg(new ChessMsg(MsgType.SETCHESS, -1, -1, Chess.BLACK));
-                    System.out.println("Set Black");
-                } else {
-                    sendSlaveMsg(new ChessMsg(MsgType.SETCHESS, -1, -1, Chess.WHITE));
-                    System.out.println("Set White");
+                if(masterOut != null){
+                    sendMasterMsg(new ChessMsg(MsgType.SET_CLIENT,0,0,Chess.fromInt(ClientType.MASTER.toInt())));
+                }
+                if(slaveOut != null){
+                    sendSlaveMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.SLAVE.toInt())));
                 }
             }
-            case HEARTBEAT -> {
-                sendAllMsg(new ChessMsg(MsgType.HEARTBEAT, -1, -1, Chess.EMPTY));
+            case READY -> {
+                switch (msg.chess){
+                    case BLACK -> {
+                        masterReady = msg.x == 1;
+                    }
+                    case WHITE -> {
+                        slaveReady = msg.x == 1;
+                    }
+                }
+                if(masterReady && slaveReady){
+                    sendMasterMsg(new ChessMsg(MsgType.SET_CHESS,0,0,Chess.BLACK));
+                    sendSlaveMsg(new ChessMsg(MsgType.SET_CHESS,0,0,Chess.WHITE));
+                    sendAllMsg(new ChessMsg(MsgType.START, 0, 0, Chess.EMPTY));
+                }
             }
             case PLACE -> {
                 if (game.placeChess(msg.x, msg.y, msg.chess)) {
                     sendAllMsg(new ChessMsg(MsgType.PLACED, msg.x, msg.y, msg.chess));
                     System.out.println("Placed");
                 }
-            }
-            case REQUIRE_REWIND -> {
-                sendAllMsg(new ChessMsg(MsgType.REQUIRE_REWIND, 0, 0, msg.chess));
-            }
-            case ACCEPT_REWIND -> {
-                game.rewind();
-                sendAllMsg(new ChessMsg(MsgType.ACCEPT_REWIND, -1, -1, game.getNextTurn()));
-            }
-            case REJECT_REWIND -> {
-                sendAllMsg(new ChessMsg(MsgType.REJECT_REWIND, -1, -1, game.getNextTurn()));
             }
         }
     }

@@ -6,28 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChessBoard extends JPanel implements MouseListener {
-    JFrame mainWindow;
     Client client;
-    boolean game_end = false;
+    boolean game_start = false;
     public List<ChessStep> steps = new ArrayList<>();
 
-    ChessBoard(JFrame parent, Client client) {
-        mainWindow = parent;
+    ChessBoard(Client client) {
         this.client = client;
         this.addMouseListener(this);
-        setSize(500, 500);
         setVisible(true);
     }
 
-    public void addStep(int x, int y, Chess chess){
-        steps.add(new ChessStep(x,y,chess));
+    public void addStep(int x, int y, Chess chess) {
+        steps.add(new ChessStep(x, y, chess));
         repaint();
     }
 
-    public void rewind(){
-        if(steps.size() < 1)
+    public void rewind() {
+        if (steps.size() < 1)
             return;
-        steps.remove(steps.size()-1);
+        steps.remove(steps.size() - 1);
         repaint();
     }
 
@@ -70,13 +67,12 @@ public class ChessBoard extends JPanel implements MouseListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (!game_end) {
+        if (game_start) {
             int place_x = (e.getX() - 25) / 30;
             int place_y = (e.getY() - 25) / 30;
-            if(place_x >= 0 && place_x <= 14 && place_y >= 0 && place_y <= 14){
-
-            client.place(place_y,place_x);
-            this.repaint();
+            if (place_x >= 0 && place_x <= 14 && place_y >= 0 && place_y <= 14) {
+                client.place(place_y, place_x);
+                this.repaint();
             }
         }
     }

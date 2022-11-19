@@ -1,8 +1,9 @@
 public enum MsgType {
     JOIN,
     TURN,
-    SETCHESS,
-    HEARTBEAT,
+    READY,
+    SET_CLIENT,
+    SET_CHESS,
     START,
     PLACE,
     PLACED,

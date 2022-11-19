@@ -1,59 +1,55 @@
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 
 public class Client {
     Socket socket;
+    ObjectOutputStream out = null;
+    ObjectInputStream in = null;
+    ClientType type;
     Chess chess = Chess.EMPTY;
     MainWindow window;
     boolean gameStarted = false;
 
-    public Client(){
-        window = new MainWindow(this);
+    public Client(MainWindow window){
+        this.window = window;
     }
 
-    public void setReady(){
+    private void sendMsg(ChessMsg msg){
+            try {
+                out = new ObjectOutputStream(socket.getOutputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        try {
+            System.out.printf("[Send] Type:%s, x:%d, y:%d, Chess:%s\r\n",msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+            out.writeObject(msg);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void Join(){
         try {
             socket = new Socket("127.0.0.1",2333);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new ChessMsg(MsgType.JOIN,-1,-1,Chess.EMPTY));
-            objectOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-            try {
-                processMsg((ChessMsg) objectInputStream.readObject());
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        sendMsg(new ChessMsg(MsgType.JOIN,-1,-1,Chess.EMPTY));
+        startUpdate();
     }
-    public void startGame(){
+    private void startUpdate(){
         new Thread(() -> {
-            setReady();
             while(true)
             {
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                //System.out.println(df.format(System.currentTimeMillis()) + "update");
                 update();
-//                try {
-//                    Thread.sleep(500);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
         }).start();
+    }
+    public void setReady(boolean ready){
+        sendMsg(new ChessMsg(MsgType.READY,ready?1:0,0,Chess.fromInt(type.toInt())));
     }
     public void place(int x, int y){
         try {
@@ -64,52 +60,37 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        try {
-//            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-//            try {
-//                processMsg((ChessMsg) objectInputStream.readObject());
-//            } catch (ClassNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
-    public void update(){
-
-//        try {
-//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-//            objectOutputStream.writeObject(new ChessMsg(MsgType.HEARTBEAT,-1,-1,Chess.EMPTY));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+    private void update(){
+        if(in == null){
             try {
-                processMsg((ChessMsg) objectInputStream.readObject());
-            } catch (ClassNotFoundException e) {
+                in = new ObjectInputStream(socket.getInputStream());
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        } catch (IOException e) {
+        }
+        try {
+            processMsg((ChessMsg) in.readObject());
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
     }
     private void processMsg(ChessMsg msg)
     {
-        if(msg.type != MsgType.HEARTBEAT)
-            System.out.printf("type:%s x:%d y:%d chess:%s\r\n",msg.type.toString(),msg.x,msg.y,msg.chess.toString());
+        System.out.printf("[Receive] Type:%s x:%d y:%d Chess:%s\r\n",msg.type.toString(),msg.x,msg.y,msg.chess.toString());
         switch (msg.type){
-            case SETCHESS -> {
+            case SET_CLIENT -> {
+                type = ClientType.fromInt(msg.chess.toInt());
+                window.setTitle(type.toString());
+            }
+            case SET_CHESS -> {
                 if(chess == Chess.EMPTY){
                     chess = msg.chess;
-                    switch(chess){
-                        case BLACK -> System.out.println("get b");
-                        case WHITE -> System.out.println("get w");
-                    }
+                    window.setTitle(chess.toString());
                 }
+            }
+            case START -> {
+                window.board.game_start = true;
             }
             case PLACED -> {
                 window.board.addStep(msg.x,msg.y,msg.chess);

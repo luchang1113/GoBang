@@ -1,6 +1,5 @@
 public class ClientMain {
     public static void main(String[] args){
-        Client client = new Client();
-        client.startGame();
+        MainWindow window = new MainWindow();
     }
 }
