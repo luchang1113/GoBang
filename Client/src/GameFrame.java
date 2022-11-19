@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
-public class MainWindow extends JFrame {
+public class GameFrame extends JFrame {
     ChessBoard board;
     JButton startBtn;
     Client client;
-    MainWindow(){
+    GameFrame(){
         client = new Client(this);
         board = new ChessBoard(client);
         board.setBounds(0,0,500,500);

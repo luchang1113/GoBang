@@ -8,11 +8,11 @@ public class Client {
     BufferedReader in = null;
     ClientType type = ClientType.WATCHER;
     Chess chess = Chess.EMPTY;
-    MainWindow window;
+    GameFrame window;
     Thread updateThread;
     boolean gameStarted = false;
 
-    public Client(MainWindow window){
+    public Client(GameFrame window){
         this.window = window;
     }
 
