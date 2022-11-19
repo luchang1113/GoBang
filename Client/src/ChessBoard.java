@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ChessBoard extends JPanel implements MouseListener {
     Client client;
-    boolean game_start = false;
+    boolean can_place = false;
     public List<ChessStep> steps = new ArrayList<>();
 
     ChessBoard(Client client) {
@@ -67,7 +67,7 @@ public class ChessBoard extends JPanel implements MouseListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (game_start) {
+        if (can_place) {
             int place_x = (e.getX() - 25) / 30;
             int place_y = (e.getY() - 25) / 30;
             if (place_x >= 0 && place_x <= 14 && place_y >= 0 && place_y <= 14) {

@@ -14,4 +14,16 @@ public class ChessMsg implements Serializable {
         this.y = y;
         this.chess = chess;
     }
+
+    @Override
+    public String toString() {
+        return type.toString()+":"+ x + ":" + y + ":" + chess.toString();
+    }
+
+    public ChessMsg(String string){
+        type = MsgType.valueOf(string.split(":")[0]);
+        x = Integer.parseInt(string.split(":")[1]);
+        y = Integer.parseInt(string.split(":")[2]);
+        chess = Chess.valueOf(string.split(":")[3]);
+    }
 }

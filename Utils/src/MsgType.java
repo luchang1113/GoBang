@@ -10,7 +10,7 @@ public enum MsgType {
     REQUIRE_REWIND,
     ACCEPT_REWIND,
     REJECT_REWIND,
-    REWINDED,
+    EXIT,
     GAME_END,
     GAME_RESTART,
 }

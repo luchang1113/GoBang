@@ -1,13 +1,12 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class Client {
     Socket socket;
-    ObjectOutputStream out = null;
-    ObjectInputStream in = null;
-    ClientType type;
+    BufferedOutputStream out = null;
+    BufferedReader in = null;
+    ClientType type = ClientType.WATCHER;
     Chess chess = Chess.EMPTY;
     MainWindow window;
     boolean gameStarted = false;
@@ -18,13 +17,14 @@ public class Client {
 
     private void sendMsg(ChessMsg msg){
             try {
-                out = new ObjectOutputStream(socket.getOutputStream());
+                if(out == null)
+                out = new BufferedOutputStream(socket.getOutputStream());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         try {
             System.out.printf("[Send] Type:%s, x:%d, y:%d, Chess:%s\r\n",msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-            out.writeObject(msg);
+            out.write((msg.toString()+"\r\n").getBytes(StandardCharsets.UTF_8));
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,6 +44,8 @@ public class Client {
         new Thread(() -> {
             while(true)
             {
+                if(socket == null)
+                    break;
                 update();
             }
         }).start();
@@ -52,11 +54,15 @@ public class Client {
         sendMsg(new ChessMsg(MsgType.READY,ready?1:0,0,Chess.fromInt(type.toInt())));
     }
     public void place(int x, int y){
+        sendMsg(new ChessMsg(MsgType.PLACE,x,y,chess));
+    }
+    public void exit(){
+        sendMsg(new ChessMsg(MsgType.EXIT,0,0,Chess.fromInt(type.toInt())));
         try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new ChessMsg(MsgType.PLACE,x,y,chess));
-            objectOutputStream.flush();
-            System.out.println("Send place");
+            socket.close();
+            in = null;
+            out = null;
+            socket = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,14 +70,14 @@ public class Client {
     private void update(){
         if(in == null){
             try {
-                in = new ObjectInputStream(socket.getInputStream());
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         try {
-            processMsg((ChessMsg) in.readObject());
-        } catch (IOException | ClassNotFoundException e) {
+            processMsg(new ChessMsg(in.readLine()));
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -90,10 +96,23 @@ public class Client {
                 }
             }
             case START -> {
-                window.board.game_start = true;
+                if(chess == Chess.BLACK)
+                    window.board.can_place = true;
+                else
+                    window.board.can_place = false;
             }
             case PLACED -> {
                 window.board.addStep(msg.x,msg.y,msg.chess);
+                if(msg.chess != chess){
+                    window.board.can_place = true;
+                }else{
+                    window.board.can_place = false;
+                }
+            }
+            case GAME_END -> {
+                window.setTitle("GAME_END");
+                window.board.can_place = false;
+                System.out.printf("%s wins\r\n",msg.chess.toString());
             }
             case ACCEPT_REWIND -> {
                 System.out.println("Rewind accepted");

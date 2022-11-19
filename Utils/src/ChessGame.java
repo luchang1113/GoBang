@@ -4,7 +4,7 @@ import java.util.List;
 
 public class ChessGame {
     public List<ChessStep> steps;
-    private Chess[][] board = new Chess[15][15];
+    private final Chess[][] board = new Chess[15][15];
     private Chess next_chess = Chess.BLACK;
     public Chess winner = Chess.EMPTY;
     public boolean game_end = false;
@@ -100,6 +100,15 @@ public class ChessGame {
         count = 1;
         i = 1;
         while(y+i<15 && x < 15 && board[x][y+i] == chess){
+            i++;
+            count++;
+        }
+        if(count >= 5){
+            flag = true;
+        }
+        count = 1;
+        i = 1;
+        while(y+i<15 && x-i >= 0 && board[x-i][y+i] == chess){
             i++;
             count++;
         }
