@@ -60,11 +60,11 @@
 
 至此已完成棋局类的实现，此阶段已可通过命令行进行本地游戏。
 
-![image-20221119232158436](D:\Documents\Learn Java\Ex1\img\GameMain_Test.png)
+![image](./img/GameMain_Test.png)
 
 ### 1.2 GameFrame（游戏窗口）
 
-游戏窗口实现了底层游戏的图形化界面，
+游戏窗口实现了底层游戏的图形化界面，除了能够显示棋盘外，还配有进行开始游戏、悔棋等操作的功能区。
 
 
 

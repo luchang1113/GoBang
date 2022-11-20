@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +11,8 @@ public class ChessBoard extends JPanel implements MouseListener {
     Client client;
     boolean can_place = false;
     public List<ChessStep> steps = new ArrayList<>();
+    ImageIcon blackChess = new ImageIcon("./images/black_chess.png");
+    ImageIcon whiteChess = new ImageIcon("./images/white_chess.png");
 
     ChessBoard(Client client) {
         this.client = client;
@@ -44,12 +48,10 @@ public class ChessBoard extends JPanel implements MouseListener {
         for (ChessStep step : steps) {
             switch (step.chess) {
                 case WHITE -> {
-                    g.setColor(Color.WHITE);
-                    g.fillOval(step.y * 30 + 30, step.x * 30 + 30, 20, 20);
+                    g.drawImage(whiteChess.getImage(),step.y * 30 + 25, step.x * 30 +25,30,30, this);
                 }
                 case BLACK -> {
-                    g.setColor(Color.BLACK);
-                    g.fillOval(step.y * 30 + 30, step.x * 30 + 30, 20, 20);
+                    g.drawImage(blackChess.getImage(),step.y * 30 + 25, step.x * 30 +25,30,30, this);
                 }
             }
         }
