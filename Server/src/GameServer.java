@@ -34,7 +34,6 @@ public class GameServer {
     }
 
     public void serverBegin() {
-        System.out.println("new master thread");
         new Thread(() -> {
             synchronized (game){
 
@@ -66,7 +65,7 @@ public class GameServer {
                             }
                             try {
                                 if(masterIn == null)
-                                masterIn = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
+                                    masterIn = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
                                 if (masterOut == null) {
                                     masterOut = new BufferedOutputStream(masterSocket.getOutputStream());
                                 }
@@ -76,12 +75,10 @@ public class GameServer {
                                 e.printStackTrace();
                             }
                         }
-                        System.out.printf("Master:%s",masterIsNull?"null":"not null");
                     }).start();
                 }
 
                 if (slaveSocket != null) {
-                    System.out.println("Slave entered");
                     new Thread(() -> {
                         while (!slaveSocket.isClosed()) {
                             try {
@@ -99,7 +96,6 @@ public class GameServer {
                         slaveSocket = null;
                         slaveIn = null;
                         slaveOut = null;
-                        System.out.println("Slave is null");
                     }).start();
                 }
             }
@@ -133,9 +129,6 @@ public class GameServer {
     }
 
     private void sendWatcherMsg(ChessMsg msg) {
-        for (Socket socket : watchSockets) {
-
-        }
     }
 
     private void sendAllMsg(ChessMsg msg) {
@@ -180,6 +173,20 @@ public class GameServer {
                     masterReady = false;
                     slaveReady = false;
                 }
+            }
+            case REQUIRE_REWIND -> {
+                switch(msg.chess){
+                    case BLACK -> {
+                        sendSlaveMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
+                    }
+                    case WHITE -> {
+                        sendMasterMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
+                    }
+                }
+            }
+            case ACCEPT_REWIND -> {
+                game.rewind();
+                sendAllMsg(new ChessMsg(MsgType.ACCEPT_REWIND,0,0,game.getNextTurn()));
             }
             case EXIT -> {
                 switch (msg.chess) {
