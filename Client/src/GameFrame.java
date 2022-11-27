@@ -6,34 +6,13 @@ import java.awt.event.WindowEvent;
 
 public class GameFrame extends JFrame {
     ChessBoard board;
-    JTextField serverIP;
-    JButton connectBtn;
     JButton startBtn;
     JButton rewindBtn;
     Client client;
-    GameFrame(){
-        client = new Client(this);
+    GameFrame(Client client){
+        this.client = client;
         board = new ChessBoard(client);
         board.setBounds(0,0,500,500);
-        serverIP = new JTextField();
-        serverIP.setBounds(500,0,80,30);
-        serverIP.setText("127.0.0.1");
-        serverIP.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                client.Join(serverIP.getText());
-                connectBtn.setEnabled(false);
-            }
-        });
-        connectBtn = new JButton("Connect");
-        connectBtn.setBounds(500,30,80,30);
-        connectBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                client.Join(serverIP.getText());
-                connectBtn.setEnabled(false);
-            }
-        });
         startBtn = new JButton("Start");
         startBtn.setBounds(500,60,80,30);
         startBtn.addActionListener(new ActionListener() {
@@ -53,13 +32,10 @@ public class GameFrame extends JFrame {
             }
         });
         add(board);
-        add(serverIP);
-        add(connectBtn);
         add(startBtn);
         add(rewindBtn);
         setSize(1280,720);
         setLayout(null);
-        setVisible(true);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

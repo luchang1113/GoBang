@@ -22,7 +22,8 @@ public class Oatmeala implements Runnable{
             targetDataLine.start();
             sourceDataLine = AudioSystem.getSourceDataLine(format);
             sourceDataLine.open(format);
-            sourceDataLine.start();}catch (Exception e){
+            sourceDataLine.start();}
+        catch (Exception ignored){
         }
         int len;
         byte[] bytes = new byte[1024];

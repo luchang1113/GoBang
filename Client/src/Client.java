@@ -3,17 +3,17 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 public class Client {
-    Socket socket;
-    BufferedOutputStream out = null;
-    BufferedReader in = null;
-    ClientType type = ClientType.WATCHER;
-    Chess chess = Chess.EMPTY;
-    GameFrame window;
-    Thread updateThread;
-    boolean gameStarted = false;
+    private Socket socket;
+    private BufferedOutputStream out = null;
+    private BufferedReader in = null;
+    private ClientType type = ClientType.WATCHER;
+    private Chess chess = Chess.EMPTY;
+    private GameFrame window;
+    private Thread updateThread;
+    private boolean gameStarted = false;
 
-    public Client(GameFrame window) {
-        this.window = window;
+    public void bindGameFrame(GameFrame gameFrame){
+        window = gameFrame;
     }
 
     private void sendMsg(ChessMsg msg) {
@@ -32,11 +32,12 @@ public class Client {
         }
     }
 
-    public void Join(String host) {
+    public boolean Join(String host, int port) {
         try {
-            socket = new Socket(host, 2333);
+            socket = new Socket(host, port);
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
         if (socket != null) {
             try {
@@ -47,6 +48,7 @@ public class Client {
             sendMsg(new ChessMsg(MsgType.JOIN, -1, -1, Chess.EMPTY));
             startUpdate();
         }
+        return true;
     }
 
     private void startUpdate() {
