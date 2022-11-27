@@ -31,9 +31,9 @@ public class LoginFrame extends JFrame {
         joinBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(client.Join(ipField.getText(),Integer.parseInt(portField.getText()))){
                     gameFrame = new GameFrame(client);
                     client.bindGameFrame(gameFrame);
+                if(client.Join(ipField.getText(),Integer.parseInt(portField.getText()))){
                     gameFrame.setVisible(true);
                     setVisible(false);
                 }

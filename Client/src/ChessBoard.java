@@ -11,8 +11,8 @@ public class ChessBoard extends JPanel implements MouseListener {
     Client client;
     boolean can_place = false;
     public List<ChessStep> steps = new ArrayList<>();
-    ImageIcon blackChess = new ImageIcon("./images/black_chess.png");
-    ImageIcon whiteChess = new ImageIcon("./images/white_chess.png");
+    ImageIcon blackChess = new ImageIcon("./Client/images/black_chess.png");
+    ImageIcon whiteChess = new ImageIcon("./Client/images/white_chess.png");
 
     ChessBoard(Client client) {
         this.client = client;

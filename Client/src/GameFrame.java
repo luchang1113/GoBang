@@ -29,6 +29,7 @@ public class GameFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 client.RequireRewind();
+                rewindBtn.setEnabled(false);
             }
         });
         add(board);
