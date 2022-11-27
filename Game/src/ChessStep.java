@@ -7,4 +7,7 @@ public class ChessStep {
         this.y = y;
         this.chess = chess;
     }
+    public String toString(){
+        return chess.toString() + ":" + x + ":" + y;
+    }
 }

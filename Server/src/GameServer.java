@@ -2,31 +2,30 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class GameServer {
-    final ChessGame game;
-    ServerSocket serverSocket = null;
-    Socket masterSocket = null;
-    Socket slaveSocket = null;
-    List<Socket> watchSockets = new ArrayList<>();
-    BufferedReader masterIn = null;
-    BufferedReader slaveIn = null;
-    BufferedOutputStream masterOut = null;
-    BufferedOutputStream slaveOut = null;
-    boolean masterReady = false;
-    boolean slaveReady = false;
-    boolean masterIsNull = true;
+    private final ChessGame game;
+    private ServerSocket serverSocket = null;
+    private Socket masterSocket = null;
+    private Socket slaveSocket = null;
+    private List<Socket> watchSockets = new ArrayList<>();
+    private BufferedReader masterIn = null;
+    private BufferedReader slaveIn = null;
+    private BufferedOutputStream masterOut = null;
+    private BufferedOutputStream slaveOut = null;
+    private boolean masterReady = false;
+    private boolean slaveReady = false;
 
-    GameServer() {
+    public GameServer(int port) {
         game = new ChessGame();
-    }
-
-    public void initServer() {
         if (serverSocket == null) {
             try {
-                serverSocket = new ServerSocket(2333);
+                serverSocket = new ServerSocket(port);
+                serverBegin();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -44,7 +43,6 @@ public class GameServer {
                     System.out.println("New Client");
                     if (masterSocket == null) {
                         masterSocket = socket;
-                        masterIsNull = false;
                     } else if (slaveSocket == null) {
                         slaveSocket = socket;
                     } else {
@@ -137,7 +135,7 @@ public class GameServer {
         sendWatcherMsg(msg);
     }
 
-    private void processMsg(ChessMsg msg) {
+    private void processMsg(ChessMsg msg) throws IOException {
         System.out.printf("[Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
         switch (msg.type) {
             case JOIN -> {
@@ -170,6 +168,9 @@ public class GameServer {
                 }
                 if (game.game_end) {
                     sendAllMsg(new ChessMsg(MsgType.GAME_END, 0, 0, game.winner));
+                    Date day=new Date();
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+                    game.game2File("./"+df.format(day)+".txt");
                     masterReady = false;
                     slaveReady = false;
                 }

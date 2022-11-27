@@ -25,7 +25,7 @@ public class Client {
         }
         try {
             System.out.printf("[Send] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-            out.write((msg.toString() + "\r\n").getBytes(StandardCharsets.UTF_8));
+            out.write((msg + "\r\n").getBytes(StandardCharsets.UTF_8));
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,11 +56,6 @@ public class Client {
                     processMsg(new ChessMsg(in.readLine()));
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
             }
         });
@@ -107,10 +102,7 @@ public class Client {
                 }
             }
             case START -> {
-                if (chess == Chess.BLACK)
-                    window.board.can_place = true;
-                else
-                    window.board.can_place = false;
+                window.board.can_place = chess == Chess.BLACK;
                 window.board.steps.clear();
                 window.board.repaint();
             }

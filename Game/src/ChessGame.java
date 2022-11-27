@@ -1,3 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -130,5 +134,21 @@ public class ChessGame {
             winner = chess;
         }
         return flag;
+    }
+    public void game2File(String path) throws IOException {
+        System.out.println(path);
+        File f = new File(path);
+        if(!f.exists()){
+            f.createNewFile();
+        }
+        FileWriter fileWriter = new FileWriter(f.getName(),true);
+        BufferedWriter bw = new BufferedWriter(fileWriter);
+        for(ChessStep step : steps){
+            bw.write(step.toString()+"\r\n");
+            System.out.printf("File Write:%s\r\n",step.toString());
+        }
+        bw.flush();
+        bw.close();
+        System.out.println(f.getAbsolutePath());
     }
 }

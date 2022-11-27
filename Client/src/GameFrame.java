@@ -17,12 +17,21 @@ public class GameFrame extends JFrame {
         board.setBounds(0,0,500,500);
         serverIP = new JTextField();
         serverIP.setBounds(500,0,80,30);
+        serverIP.setText("127.0.0.1");
+        serverIP.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                client.Join(serverIP.getText());
+                connectBtn.setEnabled(false);
+            }
+        });
         connectBtn = new JButton("Connect");
         connectBtn.setBounds(500,30,80,30);
         connectBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 client.Join(serverIP.getText());
+                connectBtn.setEnabled(false);
             }
         });
         startBtn = new JButton("Start");
