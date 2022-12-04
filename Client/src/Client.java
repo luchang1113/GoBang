@@ -9,8 +9,7 @@ public class Client {
     private ClientType type = ClientType.WATCHER;
     private Chess chess = Chess.EMPTY;
     private GameFrame window;
-    private Thread updateThread;
-    private boolean gameStarted = false;
+    private final boolean gameStarted = false;
 
     public void bindGameFrame(GameFrame gameFrame){
         window = gameFrame;
@@ -24,11 +23,10 @@ public class Client {
             e.printStackTrace();
         }
         try {
-            System.out.printf("[Send] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+            System.out.printf("[Client] [Send] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
             out.write((msg + "\r\n").getBytes(StandardCharsets.UTF_8));
             out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
         }
     }
 
@@ -52,12 +50,11 @@ public class Client {
     }
 
     private void startUpdate() {
-        updateThread = new Thread(() -> {
+        Thread updateThread = new Thread(() -> {
             while (socket != null && in != null) {
                 try {
                     processMsg(new ChessMsg(in.readLine()));
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ignored) {
                 }
             }
         });
@@ -75,6 +72,9 @@ public class Client {
     public void RequireRewind() {
         sendMsg(new ChessMsg(MsgType.REQUIRE_REWIND, 0, 0, Chess.fromInt(type.toInt())));
     }
+    public void sendChat(String msg) {
+        sendMsg(new ChessMsg(MsgType.CHAT,0,0,Chess.fromInt(type.toInt()),msg));
+    }
 
     public void disconnect() {
         if (socket != null && !socket.isClosed() && in != null) {
@@ -83,14 +83,13 @@ public class Client {
                 socket.close();
                 socket=null;
                 in = null;
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ignored) {
             }
         }
     }
 
     private void processMsg(ChessMsg msg) {
-        System.out.printf("[Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+        System.out.printf("[Client] [Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
         switch (msg.type) {
             case SET_CLIENT -> {
                 type = ClientType.fromInt(msg.chess.toInt());
@@ -149,6 +148,9 @@ public class Client {
             }
             case REJECT_REWIND -> {
                 System.out.println("Rewind rejected");
+            }
+            case CHAT -> {
+                window.appendMessage(ClientType.fromInt(msg.chess.toInt()).toString()+":"+msg.msg);
             }
         }
     }

@@ -6,12 +6,11 @@ public class GameMain {
         Scanner scanner = new Scanner(System.in);
         while(!game.game_end){
             int n = scanner.nextInt();
-            switch(n){
-                case 0:
-                    int x = scanner.nextInt();
-                    int y = scanner.nextInt();
-                    game.placeChess(x,y);
-                    game.display();
+            if (n == 0) {
+                int x = scanner.nextInt();
+                int y = scanner.nextInt();
+                game.placeChess(x, y);
+                game.display();
             }
         }
     }

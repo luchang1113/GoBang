@@ -3,7 +3,7 @@ public enum ClientType {
     SLAVE(1),
     WATCHER(2);
     int i;
-    private ClientType(int i){
+    ClientType(int i){
         this.i = i;
     }
     public static ClientType fromInt(int value){

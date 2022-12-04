@@ -1,6 +1,6 @@
 public enum MsgType {
     JOIN,
-    TURN,
+    CHAT,
     READY,
     SET_CLIENT,
     SET_CHESS,

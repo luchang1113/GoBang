@@ -5,8 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RoomServer {
-    private ServerSocket server;
-    private List<GameServer> rooms = new LinkedList<>();
+    private final ServerSocket server;
+    private final List<GameServer> rooms = new LinkedList<>();
 
     RoomServer() throws IOException {
         server = new ServerSocket(2333);

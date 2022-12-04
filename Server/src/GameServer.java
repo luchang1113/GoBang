@@ -1,6 +1,8 @@
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,10 +11,11 @@ import java.util.List;
 
 public class GameServer {
     private final ChessGame game;
+    private final int port;
     private ServerSocket serverSocket = null;
     private Socket masterSocket = null;
     private Socket slaveSocket = null;
-    private List<Socket> watchSockets = new ArrayList<>();
+    private final List<Socket> watchSockets = new ArrayList<>();
     private BufferedReader masterIn = null;
     private BufferedReader slaveIn = null;
     private BufferedOutputStream masterOut = null;
@@ -22,21 +25,33 @@ public class GameServer {
 
     public GameServer(int port) {
         game = new ChessGame();
+        this.port = port;
+    }
+
+    public String getServerIP() throws UnknownHostException {
+        return InetAddress.getLocalHost().getHostAddress();
+    }
+    public int getServerPort(){
+        return serverSocket.getLocalPort();
+    }
+
+    public boolean serverBegin() {
         if (serverSocket == null) {
             try {
                 serverSocket = new ServerSocket(port);
-                serverBegin();
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
         }
-    }
-
-    public void serverBegin() {
         new Thread(() -> {
             synchronized (game){
-
-            while (true) {
+                try {
+                    System.out.printf("Server start @%s:%d\r\n", InetAddress.getLocalHost().getHostAddress(), serverSocket.getLocalPort());
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+                while (true) {
                 try {
                     System.out.println("Wait for Client");
                     Socket socket = serverSocket.accept();
@@ -46,7 +61,7 @@ public class GameServer {
                     } else if (slaveSocket == null) {
                         slaveSocket = socket;
                     } else {
-                        System.out.println(masterSocket.toString());
+                        System.out.println(masterSocket);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -100,13 +115,14 @@ public class GameServer {
 
             }
         }).start();
+        return true;
     }
 
     private void sendMasterMsg(ChessMsg msg) {
         if (masterSocket != null) {
             try {
-                System.out.printf("[Send Master] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-                masterOut.write((msg.toString()+"\r\n").getBytes(StandardCharsets.UTF_8));
+                System.out.printf("[Server] [Send Master] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+                masterOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
                 masterOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -117,8 +133,8 @@ public class GameServer {
     private void sendSlaveMsg(ChessMsg msg) {
         if (slaveSocket != null) {
             try {
-                System.out.printf("[Send Slave] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-                slaveOut.write((msg.toString()+"\r\n").getBytes(StandardCharsets.UTF_8));
+                System.out.printf("[Server] [Send Slave] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+                slaveOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
                 slaveOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -136,7 +152,7 @@ public class GameServer {
     }
 
     private void processMsg(ChessMsg msg) throws IOException {
-        System.out.printf("[Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
+        System.out.printf("[Server] [Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
         switch (msg.type) {
             case JOIN -> {
                 if (masterOut != null) {
@@ -188,6 +204,9 @@ public class GameServer {
             case ACCEPT_REWIND -> {
                 game.rewind();
                 sendAllMsg(new ChessMsg(MsgType.ACCEPT_REWIND,0,0,game.getNextTurn()));
+            }
+            case CHAT -> {
+                sendAllMsg(new ChessMsg(MsgType.CHAT,0,0,msg.chess,msg.msg));
             }
             case EXIT -> {
                 switch (msg.chess) {

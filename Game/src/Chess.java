@@ -3,7 +3,7 @@ public enum Chess {
     WHITE(1),
     EMPTY(2);
     int i;
-    private Chess(int i){
+    Chess(int i){
         this.i = i;
     }
     public static Chess fromInt(int value){

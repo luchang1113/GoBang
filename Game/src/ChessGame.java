@@ -145,7 +145,7 @@ public class ChessGame {
         BufferedWriter bw = new BufferedWriter(fileWriter);
         for(ChessStep step : steps){
             bw.write(step.toString()+"\r\n");
-            System.out.printf("File Write:%s\r\n",step.toString());
+            System.out.printf("File Write:%s\r\n", step);
         }
         bw.flush();
         bw.close();
