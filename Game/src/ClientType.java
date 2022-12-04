@@ -1,6 +1,6 @@
 public enum ClientType {
-    MASTER(0),
-    SLAVE(1),
+    HOST(0),
+    CLIENT(1),
     WATCHER(2);
     int i;
     ClientType(int i){
@@ -9,9 +9,9 @@ public enum ClientType {
     public static ClientType fromInt(int value){
         switch (value){
             case 0:
-                return MASTER;
+                return HOST;
             case 1:
-                return SLAVE;
+                return CLIENT;
             case 2:
                 return WATCHER;
         }

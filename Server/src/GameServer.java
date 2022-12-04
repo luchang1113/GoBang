@@ -15,7 +15,6 @@ public class GameServer {
     private ServerSocket serverSocket = null;
     private Socket masterSocket = null;
     private Socket slaveSocket = null;
-    private final List<Socket> watchSockets = new ArrayList<>();
     private BufferedReader masterIn = null;
     private BufferedReader slaveIn = null;
     private BufferedOutputStream masterOut = null;
@@ -60,8 +59,6 @@ public class GameServer {
                         masterSocket = socket;
                     } else if (slaveSocket == null) {
                         slaveSocket = socket;
-                    } else {
-                        System.out.println(masterSocket);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -156,10 +153,10 @@ public class GameServer {
         switch (msg.type) {
             case JOIN -> {
                 if (masterOut != null) {
-                    sendMasterMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.MASTER.toInt())));
+                    sendMasterMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.HOST.toInt())));
                 }
                 if (slaveOut != null) {
-                    sendSlaveMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.SLAVE.toInt())));
+                    sendSlaveMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.CLIENT.toInt())));
                 }
             }
             case READY -> {

@@ -37,15 +37,13 @@ public class Client {
             e.printStackTrace();
             return false;
         }
-        if (socket != null) {
-            try {
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            sendMsg(new ChessMsg(MsgType.JOIN, -1, -1, Chess.EMPTY));
-            startUpdate();
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        sendMsg(new ChessMsg(MsgType.JOIN, -1, -1, Chess.EMPTY));
+        startUpdate();
         return true;
     }
 

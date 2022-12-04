@@ -25,6 +25,11 @@ public class ChessBoard extends JPanel implements MouseListener {
         repaint();
     }
 
+    public void addStep(ChessStep step) {
+        steps.add(step);
+        repaint();
+    }
+
     public void rewind() {
         if (steps.size() < 1)
             return;
