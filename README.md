@@ -136,3 +136,7 @@ boolean 成员 hostReady 与 clientReady, 用于判断双方是否准备好开�
 ###### 1.3.4.2.3 sendHostMsg sendClientMsg sendAllMsg（发送信息）
 
 向 host, client 单独发送信息，或进行广播。使用 toString 方法将传入的 ChessMsg 参数转换为字符串，并通过 BufferedOutputStream 进行发送。
+
+###### 1.3.4.2.4 processMsg（处理消息）
+
+用于处理 BufferedReader 接受到的 ChessMsg 消息。根据 msg 中所含的消息种类进行不同操作，如：JOIN 类型的消息，则向客户端发送分配的客户端类型消息。PLACE 类型的消息，则根据消息中的 x 与 y 参数对 game 进行操作，并将结果返回至客户端。若游戏结束则向客户端发送游戏结束消息，并效用 game 中的 game2File 方法，将棋局保存为文件，用于复盘。
