@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -21,7 +19,7 @@ public class ReplayFrame extends JFrame {
         }
         FileReader fileReader = new FileReader(f);
         BufferedReader br = new BufferedReader(fileReader);
-        String str = null;
+        String str;
         while((str = br.readLine()) != null) {
             steps.add(new ChessStep(str));
         }
@@ -36,24 +34,15 @@ public class ReplayFrame extends JFrame {
         add(board);
 
         nextBtn = new JButton("Next");
-        nextBtn.setBounds(500,60,100,30);
-        nextBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                nextStep();
-            }
-        });
+        nextBtn.setBounds(525,60,100,30);
+        nextBtn.addActionListener(e -> nextStep());
         add(nextBtn);
         prevBtn = new JButton("Prev");
-        prevBtn.setBounds(500,90,100,30);
-        prevBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                prevStep();
-            }
-        });
+        prevBtn.setBounds(525,90,100,30);
+        prevBtn.addActionListener(e -> prevStep());
         add(prevBtn);
         setBtn();
+        setTitle(path);
         setLayout(null);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -64,16 +53,8 @@ public class ReplayFrame extends JFrame {
         setVisible(true);
     }
     void setBtn() {
-        if (index < steps.size()) {
-            nextBtn.setEnabled(true);
-        } else {
-            nextBtn.setEnabled(false);
-        }
-        if(index > 0) {
-            prevBtn.setEnabled(true);
-        } else {
-            prevBtn.setEnabled(false);
-        }
+        nextBtn.setEnabled(index < steps.size());
+        prevBtn.setEnabled(index > 0);
     }
     void nextStep() {
         if (index < steps.size()) {

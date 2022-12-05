@@ -9,7 +9,6 @@ public class Client {
     private ClientType type = ClientType.WATCHER;
     private Chess chess = Chess.EMPTY;
     private GameFrame window;
-    private final boolean gameStarted = false;
 
     public void bindGameFrame(GameFrame gameFrame){
         window = gameFrame;
@@ -136,19 +135,19 @@ public class Client {
             case ACCEPT_REWIND -> {
                 System.out.println("Rewind accepted");
                 if (msg.chess == chess) {
-                    window.board.can_place = true;
+                    window.board.can_place = false;
                     window.rewindBtn.setEnabled(false);
                 } else {
-                    window.board.can_place = false;
-                    window.rewindBtn.setEnabled(true);
+                    window.board.can_place = true;
+                    window.rewindBtn.setEnabled(false);
                 }
                 window.board.rewind();
             }
-            case REJECT_REWIND -> {
-                System.out.println("Rewind rejected");
-            }
+            case REJECT_REWIND -> System.out.println("Rewind rejected");
             case CHAT -> {
-                window.appendMessage(ClientType.fromInt(msg.chess.toInt()).toString()+":"+msg.msg);
+                if (ClientType.fromInt(msg.chess.toInt()) != null) {
+                    window.appendMessage(ClientType.fromInt(msg.chess.toInt()).toString()+":"+msg.msg);
+                }
             }
         }
     }
