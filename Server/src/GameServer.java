@@ -5,22 +5,20 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class GameServer {
     private final ChessGame game;
     private final int port;
     private ServerSocket serverSocket = null;
-    private Socket masterSocket = null;
-    private Socket slaveSocket = null;
-    private BufferedReader masterIn = null;
-    private BufferedReader slaveIn = null;
-    private BufferedOutputStream masterOut = null;
-    private BufferedOutputStream slaveOut = null;
-    private boolean masterReady = false;
-    private boolean slaveReady = false;
+    private Socket hostSocket = null;
+    private Socket clientSocket = null;
+    private BufferedReader hostIn = null;
+    private BufferedReader clientIn = null;
+    private BufferedOutputStream hostOut = null;
+    private BufferedOutputStream clientOut = null;
+    private boolean hostReady = false;
+    private boolean clientReady = false;
 
     public GameServer(int port) {
         game = new ChessGame();
@@ -55,31 +53,31 @@ public class GameServer {
                     System.out.println("Wait for Client");
                     Socket socket = serverSocket.accept();
                     System.out.println("New Client");
-                    if (masterSocket == null) {
-                        masterSocket = socket;
-                    } else if (slaveSocket == null) {
-                        slaveSocket = socket;
+                    if (hostSocket == null) {
+                        hostSocket = socket;
+                    } else if (clientSocket == null) {
+                        clientSocket = socket;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                if (masterSocket != null) {
+                if (hostSocket != null) {
                     new Thread(() -> {
-                        while (masterSocket != null) {
-                            if(masterSocket.isClosed()){
-                                masterSocket = null;
-                                masterIn = null;
-                                masterOut = null;
+                        while (hostSocket != null) {
+                            if(hostSocket.isClosed()){
+                                hostSocket = null;
+                                hostIn = null;
+                                hostOut = null;
                                 break;
                             }
                             try {
-                                if(masterIn == null)
-                                    masterIn = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
-                                if (masterOut == null) {
-                                    masterOut = new BufferedOutputStream(masterSocket.getOutputStream());
+                                if(hostIn == null)
+                                    hostIn = new BufferedReader(new InputStreamReader(hostSocket.getInputStream()));
+                                if (hostOut == null) {
+                                    hostOut = new BufferedOutputStream(hostSocket.getOutputStream());
                                 }
-                                ChessMsg msg = new ChessMsg(masterIn.readLine());
+                                ChessMsg msg = new ChessMsg(hostIn.readLine());
                                 processMsg(msg);
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -88,24 +86,24 @@ public class GameServer {
                     }).start();
                 }
 
-                if (slaveSocket != null) {
+                if (clientSocket != null) {
                     new Thread(() -> {
-                        while (!slaveSocket.isClosed()) {
+                        while (!clientSocket.isClosed()) {
                             try {
-                                if(slaveIn == null)
-                                    slaveIn = new BufferedReader(new InputStreamReader(slaveSocket.getInputStream()));
-                                if (slaveOut == null) {
-                                    slaveOut = new BufferedOutputStream(slaveSocket.getOutputStream());
+                                if(clientIn == null)
+                                    clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                                if (clientOut == null) {
+                                    clientOut = new BufferedOutputStream(clientSocket.getOutputStream());
                                 }
-                                ChessMsg msg = new ChessMsg(slaveIn.readLine());
+                                ChessMsg msg = new ChessMsg(clientIn.readLine());
                                 processMsg(msg);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
-                        slaveSocket = null;
-                        slaveIn = null;
-                        slaveOut = null;
+                        clientSocket = null;
+                        clientIn = null;
+                        clientOut = null;
                     }).start();
                 }
             }
@@ -115,24 +113,24 @@ public class GameServer {
         return true;
     }
 
-    private void sendMasterMsg(ChessMsg msg) {
-        if (masterSocket != null) {
+    private void sendHostMsg(ChessMsg msg) {
+        if (hostSocket != null) {
             try {
                 System.out.printf("[Server] [Send Master] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-                masterOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
-                masterOut.flush();
+                hostOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
+                hostOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void sendSlaveMsg(ChessMsg msg) {
-        if (slaveSocket != null) {
+    private void sendClientMsg(ChessMsg msg) {
+        if (clientSocket != null) {
             try {
                 System.out.printf("[Server] [Send Slave] Type:%s, x:%d, y:%d, Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
-                slaveOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
-                slaveOut.flush();
+                clientOut.write((msg +"\r\n").getBytes(StandardCharsets.UTF_8));
+                clientOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -143,8 +141,8 @@ public class GameServer {
     }
 
     private void sendAllMsg(ChessMsg msg) {
-        sendMasterMsg(msg);
-        sendSlaveMsg(msg);
+        sendHostMsg(msg);
+        sendClientMsg(msg);
         sendWatcherMsg(msg);
     }
 
@@ -152,25 +150,25 @@ public class GameServer {
         System.out.printf("[Server] [Receive] Type:%s x:%d y:%d Chess:%s\r\n", msg.type.toString(), msg.x, msg.y, msg.chess.toString());
         switch (msg.type) {
             case JOIN -> {
-                if (masterOut != null) {
-                    sendMasterMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.HOST.toInt())));
+                if (hostOut != null) {
+                    sendHostMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.HOST.toInt())));
                 }
-                if (slaveOut != null) {
-                    sendSlaveMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.CLIENT.toInt())));
+                if (clientOut != null) {
+                    sendClientMsg(new ChessMsg(MsgType.SET_CLIENT, 0, 0, Chess.fromInt(ClientType.CLIENT.toInt())));
                 }
             }
             case READY -> {
                 switch (msg.chess) {
                     case BLACK -> {
-                        masterReady = msg.x == 1;
+                        hostReady = msg.x == 1;
                     }
                     case WHITE -> {
-                        slaveReady = msg.x == 1;
+                        clientReady = msg.x == 1;
                     }
                 }
-                if (masterReady && slaveReady) {
-                    sendMasterMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.BLACK));
-                    sendSlaveMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.WHITE));
+                if (hostReady && clientReady) {
+                    sendHostMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.BLACK));
+                    sendClientMsg(new ChessMsg(MsgType.SET_CHESS, 0, 0, Chess.WHITE));
                     sendAllMsg(new ChessMsg(MsgType.START, 0, 0, Chess.EMPTY));
                     game.reset();
                 }
@@ -184,17 +182,17 @@ public class GameServer {
                     Date day=new Date();
                     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
                     game.game2File("./"+df.format(day)+".txt");
-                    masterReady = false;
-                    slaveReady = false;
+                    hostReady = false;
+                    clientReady = false;
                 }
             }
             case REQUIRE_REWIND -> {
                 switch(msg.chess){
                     case BLACK -> {
-                        sendSlaveMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
+                        sendClientMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
                     }
                     case WHITE -> {
-                        sendMasterMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
+                        sendHostMsg(new ChessMsg(MsgType.REQUIRE_REWIND,0,0,msg.chess));
                     }
                 }
             }
@@ -209,14 +207,14 @@ public class GameServer {
                 switch (msg.chess) {
                     case BLACK -> {
                         try {
-                            masterSocket.close();
+                            hostSocket.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                     case WHITE -> {
                         try {
-                            slaveSocket.close();
+                            clientSocket.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

@@ -109,3 +109,30 @@
 
 首先服务端启动，等待客户端进行连接。在客户端连接后，根据当前连接情况对客户端进行分配，可分配的类型有：HOST, CLIENT. 并将分配情况返回至客户端。客户端对返回值进行响应，等待用户发送准备消息。双方均准备好后，服务端向客户端发送游戏开始消息。之后客户端将用户落子位置消息发送至服务端，服务端对此消息进行响应并广播。客户端再次响应广播消息。在一方提出悔棋时，将悔棋请求发送至服务端，服务端进行转发。另一方客户端对转发消息进行响应后发送是否同意消息，服务器进行处理并对处理结果进行广播。在游戏结束后，服务器对游戏结果进行广播。一方退出后，游戏会进行重置，并再次等待新的客户端进行连接。
 
+#### 1.3.4 GameServer（游戏服务器）
+
+##### 1.3.4.1 成员
+
+ChessGame 类成员 game, 用于进行各种游戏操作。
+
+ServerSocket 类成员 serverSocket, 用于处理服务端与客户端的连接。
+
+Socket 类成员 hostSocket 与 clientSocket, 分别作为与房主和与对手进行连接的 Socket. 
+
+BufferedReader 类成员与 BufferedOutputStream 类成员，分别与房主和与对手进行数据的输入输出。
+
+boolean 成员 hostReady 与 clientReady, 用于判断双方是否准备好开始游戏。
+
+##### 1.3.4.2 方法
+
+###### 1.3.4.2.1 GameServer（构造方法）
+
+首先实例化一个 ChessGame 对象作为此服务器的棋局，并将服务器端口设置为传入的参数 port. 
+
+###### 1.3.4.2.2 serverBegin（开启服务）
+
+实例化一个 serverSocket 对象，并且开启一个线程用于处理与此服务器的连接。当有新连接建立时，若 hostSocket 与 clientSocket 均为 null 时，则将新的连接分配至 hostSocket, 否则分配至 clientSocket. 同时开启一个新线程，用于处理与 host 或与 client 之间的输入输出。若服务开启成功则返回 truem 否则返回 false. 
+
+###### 1.3.4.2.3 sendHostMsg sendClientMsg sendAllMsg（发送信息）
+
+向 host, client 单独发送信息，或进行广播。使用 toString 方法将传入的 ChessMsg 参数转换为字符串，并通过 BufferedOutputStream 进行发送。
