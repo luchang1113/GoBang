@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -129,21 +130,23 @@ public class Client {
                 window.setTitle("GAME_END");
                 window.board.can_place = false;
                 window.rewindBtn.setEnabled(false);
-                System.out.printf("%s wins\r\n", msg.chess.toString());
+                System.out.printf("[Client] %s wins\r\n", msg.chess.toString());
+                JOptionPane.showMessageDialog(null,msg.chess.toString() +" wins!", "Game Over",JOptionPane.INFORMATION_MESSAGE);
                 window.startBtn.setEnabled(true);
             }
             case ACCEPT_REWIND -> {
-                System.out.println("Rewind accepted");
+                System.out.println("[Client] Rewind accepted");
+                System.out.printf("[Client] Now %s can place\r\n",msg.chess.toString());
                 if (msg.chess == chess) {
-                    window.board.can_place = false;
+                    window.board.can_place = true;
                     window.rewindBtn.setEnabled(false);
                 } else {
-                    window.board.can_place = true;
+                    window.board.can_place = false;
                     window.rewindBtn.setEnabled(false);
                 }
                 window.board.rewind();
             }
-            case REJECT_REWIND -> System.out.println("Rewind rejected");
+            case REJECT_REWIND -> System.out.println("[Client] Rewind rejected");
             case CHAT -> {
                 if (ClientType.fromInt(msg.chess.toInt()) != null) {
                     window.appendMessage(ClientType.fromInt(msg.chess.toInt()).toString()+":"+msg.msg);

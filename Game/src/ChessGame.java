@@ -29,7 +29,7 @@ public class ChessGame {
     public void rewind(){
         if(steps.size() < 1)
         {
-            System.out.println("Cannot rewind");
+            System.out.println("[ChessGame] Cannot rewind");
             return;
         }
         board[steps.get(steps.size()-1).x][steps.get(steps.size()-1).y] = Chess.EMPTY;
@@ -38,6 +38,7 @@ public class ChessGame {
             case BLACK -> next_chess = Chess.WHITE;
             case WHITE -> next_chess = Chess.BLACK;
         }
+        System.out.printf("[ChessGame] Next Chess is %s\r\n",next_chess.toString());
         //display();
     }
     public void display(){
@@ -56,15 +57,11 @@ public class ChessGame {
         if(!placeChess(x,y,next_chess)){
             return false;
         }
-        switch (next_chess){
-            case BLACK -> next_chess = Chess.WHITE;
-            case WHITE -> next_chess = Chess.BLACK;
-        }
         return true;
     }
     public boolean placeChess(int x, int y, Chess chess){
         if(x < 0 || y < 0 || x > 14 || y > 14 || chess == Chess.EMPTY || board[x][y] != Chess.EMPTY){
-            System.out.println("Invalid place");
+            System.out.println("[ChessGame] Invalid place");
             return false;
         }
         steps.add(new ChessStep(x,y,chess));
@@ -72,13 +69,18 @@ public class ChessGame {
         for(ChessStep step : steps){
             if(checkWin(step.x, step.y, step.chess)){
                 switch (step.chess){
-                    case BLACK -> System.out.println("Black wins!");
-                    case WHITE -> System.out.println("White wins");
+                    case BLACK -> System.out.println("[ChessGame] Black wins!");
+                    case WHITE -> System.out.println("[ChessGame] White wins");
                 }
                 game_end = true;
             }
         }
         //display();
+        switch (next_chess){
+            case BLACK -> next_chess = Chess.WHITE;
+            case WHITE -> next_chess = Chess.BLACK;
+        }
+        System.out.printf("[ChessGame] Next Chess is %s\r\n",next_chess.toString());
         return true;
     }
     public void reset(){
@@ -145,7 +147,7 @@ public class ChessGame {
         BufferedWriter bw = new BufferedWriter(fileWriter);
         for(ChessStep step : steps){
             bw.write(step.toString()+"\r\n");
-            System.out.printf("File Write:%s\r\n", step);
+            System.out.printf("[ChessGame] File Write:%s\r\n", step);
         }
         bw.flush();
         bw.close();
